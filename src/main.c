@@ -22,19 +22,18 @@ int derle_ve_calistir(const char* dosya_yolu) {
     }
 
     printf("[3/3] GCC ile derleniyor...\n");
-    char komut[256];
-    snprintf(komut, sizeof(komut), "gcc %s -I./src/include -o program", c_cikti_yolu);
+    int derleme_sonucu = system("gcc -Wall -Wextra -I./src/include gecici_oz_cikti.c -o program > /dev/null 2>&1");
     
-    int gcc_sonuc = system(komut);
-    
-    if (gcc_sonuc == 0) {
-        printf("========================================\n");
-        printf("Basariyla derlendi! Program calistiriliyor...\n");
-        printf("========================================\n\n");
+    if (derleme_sonucu == 0) {
+        // Derleme basarili, dogrudan calistir (Python gibi)
         system("./program");
-        printf("\n========================================\n");
+        
+        // Temizlik (Kullanici arkaplandaki C dosyalarini ve binary'i gormesin, sadece sonucu gorsun)
+        remove("gecici_oz_cikti.c");
+        remove("program");
     } else {
-        printf("Derleme sirasinda hata olustu!\n");
+        printf("Hata: Kodunuzda soz dizimi hatasi veya tanimsiz bir degisken/kelime var!\n");
+        return 1;
     }
 
     free(kaynak_kod);

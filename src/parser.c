@@ -61,6 +61,7 @@ int parse_and_transpile(TokenArray* tokens, const char* c_cikti_yolu) {
     fprintf(out, "int main() {\n");
 
     int is_global = 1;
+    int in_eger = 0;
     int in_islev_decl = 0;
 
     for (int i = 0; i < tokens->count; i++) {
@@ -230,7 +231,7 @@ int parse_and_transpile(TokenArray* tokens, const char* c_cikti_yolu) {
                         fprintf(out, "printf(\"%%s\\n\", \"%s\");\n", tokens->tokens[i+1].deger);
                         i++;
                     } else if (tokens->tokens[i+1].tip == TOKEN_SAYI) {
-                        fprintf(out, "printf(\"%%f\\n\", (double)%s);\n", tokens->tokens[i+1].deger);
+                        fprintf(out, "printf(\"%%ld\\n\", %sL);\n", tokens->tokens[i+1].deger);
                         i++;
                     } else if (tokens->tokens[i+1].tip == TOKEN_PARANTEZ_AC) {
                         // islem yazdirmaya calisiyor (5 + 3) gibi. Sadece int (long) desteklesin simdilik.
@@ -269,8 +270,40 @@ int parse_and_transpile(TokenArray* tokens, const char* c_cikti_yolu) {
                 fprintf(out, "return ");
             } else if (strcmp(t.deger, "kir") == 0) {
                 fprintf(out, "break;\n");
+            } else if (strcmp(t.deger, "devam_et") == 0) {
+                fprintf(out, "continue;\n");
+            } else if (strcmp(t.deger, "sabit") == 0) {
+                fprintf(out, "const ");
+            } else if (strcmp(t.deger, "Dogru") == 0) {
+                fprintf(out, "1 ");
+            } else if (strcmp(t.deger, "Yanlis") == 0) {
+                fprintf(out, "0 ");
+            } else if (strcmp(t.deger, "hic") == 0) {
+                fprintf(out, "NULL ");
+            } else if (strcmp(t.deger, "eger") == 0) {
+                in_eger = 1;
+                fprintf(out, "( ");
             }
         } else if (t.tip == TOKEN_ID) {
+            // Implicit declaration (Type Inference - Python like)
+            if (strncmp(t.deger, "_oz_", 4) != 0 && !is_declared(t.deger) && i + 1 < tokens->count && tokens->tokens[i+1].tip == TOKEN_ESIT) {
+                if (i + 2 < tokens->count && tokens->tokens[i+2].tip == TOKEN_METIN) {
+                    fprintf(out, "char* ");
+                    declare_var(t.deger, 1);
+                } else if (i + 2 < tokens->count && tokens->tokens[i+2].tip == TOKEN_SAYI && strchr(tokens->tokens[i+2].deger, '.') != NULL) {
+                    fprintf(out, "double ");
+                    declare_var(t.deger, 2);
+                } else if (i + 2 < tokens->count && tokens->tokens[i+2].tip == TOKEN_ID && strcmp(tokens->tokens[i+2].deger, "sozluk_olustur") == 0) {
+                    fprintf(out, "Sozluk* ");
+                    declare_var(t.deger, 3);
+                } else if (i + 2 < tokens->count && tokens->tokens[i+2].tip == TOKEN_ANAHTAR && strcmp(tokens->tokens[i+2].deger, "hic") == 0) {
+                    fprintf(out, "void* ");
+                    declare_var(t.deger, 0); // void* icin type 0 veya ozel type
+                } else {
+                    fprintf(out, "long ");
+                    declare_var(t.deger, 0);
+                }
+            }
             fprintf(out, "%s ", t.deger);
         } else if (t.tip == TOKEN_METIN) {
             fprintf(out, "\"%s\" ", t.deger);
@@ -289,12 +322,16 @@ int parse_and_transpile(TokenArray* tokens, const char* c_cikti_yolu) {
         } else if (t.tip == TOKEN_MOD) {
             fprintf(out, "%% ");
         } else if (t.tip == TOKEN_IKINOKTA) {
-            current_scope++;
-            if (in_islev_decl || in_sinif_block) {
-                fprintf(out, " {\n");
-                in_islev_decl = 0;
+            if (in_eger) {
+                fprintf(out, ") ? ");
             } else {
-                fprintf(out, ") {\n");
+                current_scope++;
+                if (in_islev_decl || in_sinif_block) {
+                    fprintf(out, " {\n");
+                    in_islev_decl = 0;
+                } else {
+                    fprintf(out, ") {\n");
+                }
             }
         } else if (t.tip == TOKEN_ESIT_ESIT) {
             fprintf(out, "== ");
@@ -315,7 +352,12 @@ int parse_and_transpile(TokenArray* tokens, const char* c_cikti_yolu) {
         } else if (t.tip == TOKEN_NOKTA) {
             fprintf(out, "->");
         } else if (t.tip == TOKEN_VIRGUL) {
-            fprintf(out, ", ");
+            if (in_eger) {
+                fprintf(out, " : ");
+                in_eger = 0;
+            } else {
+                fprintf(out, ", ");
+            }
         } else if (t.tip == TOKEN_KUCUK_ESIT) {
             fprintf(out, "<= ");
         } else if (t.tip == TOKEN_BUYUK_ESIT) {
@@ -330,14 +372,22 @@ int parse_and_transpile(TokenArray* tokens, const char* c_cikti_yolu) {
         if (i + 1 < tokens->count) {
             Token next = tokens->tokens[i+1];
             if (next.satir > t.satir) {
-                if (t.tip != TOKEN_IKINOKTA && t.tip != TOKEN_ANAHTAR && 
-                    !(t.tip == TOKEN_ANAHTAR && strcmp(t.deger, "son") == 0) &&
-                    !(t.tip == TOKEN_ANAHTAR && strcmp(t.deger, "yazdir") == 0)) {
-                    if (t.tip == TOKEN_ANAHTAR && strcmp(t.deger, "degilse") == 0) {
-                        fprintf(out, "{\n"); 
+                int needs_semi = 1;
+                if (t.tip == TOKEN_IKINOKTA) needs_semi = 0;
+                if (t.tip == TOKEN_ANAHTAR) {
+                    if (strcmp(t.deger, "Dogru") == 0 || strcmp(t.deger, "Yanlis") == 0 ||
+                        strcmp(t.deger, "hic") == 0 || strcmp(t.deger, "kir") == 0 ||
+                        strcmp(t.deger, "devam_et") == 0 || strcmp(t.deger, "don") == 0) {
+                        needs_semi = 1;
+                    } else if (strcmp(t.deger, "degilse") == 0) {
+                        fprintf(out, "{\n");
+                        needs_semi = 0;
                     } else {
-                        fprintf(out, ";\n");
+                        needs_semi = 0;
                     }
+                }
+                if (needs_semi) {
+                    fprintf(out, ";\n");
                 }
             }
         }

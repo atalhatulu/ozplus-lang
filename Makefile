@@ -4,14 +4,18 @@ CFLAGS = -Wall -Wextra -I./src/include
 SRC_DIR = src
 OBJ_DIR = obj
 
-SRCS = $(wildcard $(SRC_DIR)/*.c)
+TARGET = oz
+KONSOL = oz-konsol
+
+SRCS = src/lexer.c src/main.c src/parser.c src/utils.c
 OBJS = $(patsubst $(SRC_DIR)/%.c, $(OBJ_DIR)/%.o, $(SRCS))
 
-TARGET = ozc
-
-all: $(TARGET)
+all: $(TARGET) $(KONSOL)
 
 $(TARGET): $(OBJS)
+	$(CC) $(CFLAGS) -o $@ $^
+
+$(KONSOL): $(OBJ_DIR)/konsol.o
 	$(CC) $(CFLAGS) -o $@ $^
 
 $(OBJ_DIR)/%.o: $(SRC_DIR)/%.c | $(OBJ_DIR)

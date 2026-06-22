@@ -59,15 +59,19 @@ TokenArray tokenize(const char* kaynak_kod) {
 
             if (strcmp(tampon, "islev") == 0 || strcmp(tampon, "degisken") == 0 ||
                 strcmp(tampon, "dongu") == 0 || strcmp(tampon, "ise") == 0 ||
-                strcmp(tampon, "degilse") == 0 || strcmp(tampon, "son") == 0 || 
-                strcmp(tampon, "yazdir") == 0 || strcmp(tampon, "zaman_baslat") == 0 ||
-                strcmp(tampon, "zaman_bitir") == 0 || strcmp(tampon, "don") == 0 ||
-                strcmp(tampon, "metin") == 0 || strcmp(tampon, "ondalik") == 0 ||
-                strcmp(tampon, "girdi") == 0 || strcmp(tampon, "dizi") == 0 ||
-                strcmp(tampon, "sozluk") == 0 || strcmp(tampon, "dene") == 0 ||
-                strcmp(tampon, "hata_yakala") == 0 || strcmp(tampon, "hata_firlat") == 0 ||
-                strcmp(tampon, "sinif") == 0 || strcmp(tampon, "yeni") == 0 ||
-                strcmp(tampon, "kir") == 0) {
+                strcmp(tampon, "eger") == 0 ||
+                strcmp(tampon, "degilse") == 0 || strcmp(tampon, "degilse_ise") == 0 ||
+                strcmp(tampon, "son") == 0 || strcmp(tampon, "yazdir") == 0 || 
+                strcmp(tampon, "zaman_baslat") == 0 || strcmp(tampon, "zaman_bitir") == 0 || 
+                strcmp(tampon, "don") == 0 || strcmp(tampon, "metin") == 0 || 
+                strcmp(tampon, "ondalik") == 0 || strcmp(tampon, "girdi") == 0 || 
+                strcmp(tampon, "dizi") == 0 || strcmp(tampon, "sozluk") == 0 || 
+                strcmp(tampon, "dene") == 0 || strcmp(tampon, "hata_yakala") == 0 || 
+                strcmp(tampon, "hata_firlat") == 0 || strcmp(tampon, "sinif") == 0 || 
+                strcmp(tampon, "yeni") == 0 || strcmp(tampon, "kir") == 0 || 
+                strcmp(tampon, "devam_et") == 0 || strcmp(tampon, "sabit") == 0 ||
+                strcmp(tampon, "Dogru") == 0 || strcmp(tampon, "Yanlis") == 0 ||
+                strcmp(tampon, "hic") == 0 || strcmp(tampon, "dahil_et") == 0) {
                 ekle_token(&dizi, TOKEN_ANAHTAR, tampon, satir);
             } else if (strcmp(tampon, "ve") == 0) {
                 ekle_token(&dizi, TOKEN_VE, "&&", satir);

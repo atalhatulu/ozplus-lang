@@ -1,0 +1,3 @@
+a = 10
+sonuc = eger a > 5 : "dogru" , "yanlis"
+yazdir sonuc
