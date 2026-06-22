@@ -5,8 +5,13 @@
 
 // Basit sembol tablosu ve tip yönetimi
 static char* symbol_table[1024];
-static int symbol_types[1024]; // 0: long, 1: metin(char*), 2: ondalik(double)
+static int symbol_types[1024]; // 0: long, 1: metin(char*), 2: ondalik(double), 3: sozluk
+static int symbol_scopes[1024];
 static int symbol_count = 0;
+static int current_scope = 0;
+
+static char current_class_name[256] = "";
+static int in_sinif_block = 0;
 
 static int is_declared(const char* name) {
     for (int i = 0; i < symbol_count; i++) {
@@ -26,6 +31,7 @@ static void declare_var(const char* name, int type) {
     if (!is_declared(name)) {
         symbol_table[symbol_count] = strdup(name);
         symbol_types[symbol_count] = type;
+        symbol_scopes[symbol_count] = current_scope;
         symbol_count++;
     }
 }
@@ -60,6 +66,15 @@ int parse_and_transpile(TokenArray* tokens, const char* c_cikti_yolu) {
     for (int i = 0; i < tokens->count; i++) {
         Token t = tokens->tokens[i];
         
+        if (i == 0 || tokens->tokens[i-1].satir < t.satir) {
+            int indent = current_scope;
+            if (t.tip == TOKEN_ANAHTAR && (strcmp(t.deger, "son") == 0 || strcmp(t.deger, "degilse") == 0 || strcmp(t.deger, "hata_yakala") == 0)) {
+                indent = current_scope - 1;
+                if (indent < 0) indent = 0;
+            }
+            for (int ind = 0; ind < indent; ind++) fprintf(out, "    ");
+        }
+
         if (t.tip == TOKEN_EOF) break;
 
         if (t.tip == TOKEN_ANAHTAR) {
@@ -75,12 +90,60 @@ int parse_and_transpile(TokenArray* tokens, const char* c_cikti_yolu) {
             } else if (strcmp(t.deger, "dizi") == 0) {
                 if (i + 1 < tokens->count && tokens->tokens[i+1].tip == TOKEN_ID) declare_var(tokens->tokens[i+1].deger, 0); // Varsayilan long array
                 fprintf(out, "long ");
-            } else if (strcmp(t.deger, "girdi") == 0) {
-                // girdi x veya girdi al x
-                if (i + 1 < tokens->count && tokens->tokens[i+1].tip == TOKEN_ID && strcmp(tokens->tokens[i+1].deger, "al") == 0) {
-                    i++; // 'al' kelimesini atla
+            } else if (strcmp(t.deger, "sozluk") == 0) {
+                if (i + 1 < tokens->count && tokens->tokens[i+1].tip == TOKEN_ID) declare_var(tokens->tokens[i+1].deger, 3); // 3 = Sozluk
+                fprintf(out, "OzSozluk* ");
+            } else if (strcmp(t.deger, "dene") == 0) {
+                fprintf(out, "if (setjmp(_oz_hata_buf) == 0) ");
+                if (i + 1 < tokens->count && tokens->tokens[i+1].tip == TOKEN_IKINOKTA) {
+                    fprintf(out, "{\n");
+                    current_scope++;
+                    i++;
                 }
+            } else if (strcmp(t.deger, "hata_yakala") == 0) {
+                current_scope--;
+                for(int j=symbol_count-1; j>=0; j--) {
+                    if(symbol_scopes[j] > current_scope) { 
+                        if (symbol_types[j] == 3) fprintf(out, "sozluk_sil(%s);\n", symbol_table[j]);
+                        else if (symbol_types[j] == 4) fprintf(out, "free(%s);\n", symbol_table[j]);
+                        free(symbol_table[j]); symbol_count--; 
+                    }
+                }
+                fprintf(out, "} else ");
+                if (i + 1 < tokens->count && tokens->tokens[i+1].tip == TOKEN_IKINOKTA) {
+                    fprintf(out, "{\n");
+                    current_scope++;
+                    i++;
+                }
+            } else if (strcmp(t.deger, "sinif") == 0) {
                 if (i + 1 < tokens->count && tokens->tokens[i+1].tip == TOKEN_ID) {
+                    snprintf(current_class_name, sizeof(current_class_name), "%s", tokens->tokens[i+1].deger);
+                    fprintf(out, "typedef struct ");
+                    in_sinif_block = 1;
+                    i++; // sinif adini atla
+                }
+            } else if (strcmp(t.deger, "yeni") == 0) {
+                if (i + 2 < tokens->count && tokens->tokens[i+1].tip == TOKEN_ID && tokens->tokens[i+2].tip == TOKEN_ID) {
+                    fprintf(out, "%s* %s = (%s*)malloc(sizeof(%s));\n", 
+                            tokens->tokens[i+1].deger, tokens->tokens[i+2].deger, 
+                            tokens->tokens[i+1].deger, tokens->tokens[i+1].deger);
+                    declare_var(tokens->tokens[i+2].deger, 4); // 4 = Object
+                    i += 2;
+                }
+            } else if (strcmp(t.deger, "hata_firlat") == 0) {
+                if (i + 1 < tokens->count && tokens->tokens[i+1].tip == TOKEN_METIN) {
+                    fprintf(out, "_oz_son_hata_mesaji = \"%s\"; longjmp(_oz_hata_buf, 1);\n", tokens->tokens[i+1].deger);
+                    i++;
+                } else {
+                    fprintf(out, "_oz_son_hata_mesaji = \"Bilinmeyen Hata\"; longjmp(_oz_hata_buf, 1);\n");
+                }
+            } else if (strcmp(t.deger, "girdi") == 0) {
+                if (i + 2 < tokens->count && tokens->tokens[i+1].tip == TOKEN_ID && 
+                    strcmp(tokens->tokens[i+2].deger, "al") == 0) {
+                    fprintf(out, "char %s[256] = \"\"; scanf(\" %%255[^\\n]\", %s); ", tokens->tokens[i+1].deger, tokens->tokens[i+1].deger);
+                    declare_var(tokens->tokens[i+1].deger, 1); // 1 = metin
+                    i += 2;
+                } else if (i + 1 < tokens->count && tokens->tokens[i+1].tip == TOKEN_ID) {
                     fprintf(out, "scanf(\"%%ld\", &%s);\n", tokens->tokens[i+1].deger);
                     i++;
                 }
@@ -90,22 +153,56 @@ int parse_and_transpile(TokenArray* tokens, const char* c_cikti_yolu) {
                 fprintf(out, "if (");
             } else if (strcmp(t.deger, "degilse") == 0) {
                 if (i + 1 < tokens->count && tokens->tokens[i+1].tip == TOKEN_ANAHTAR && strcmp(tokens->tokens[i+1].deger, "ise") == 0) {
+                    current_scope--;
+                    for(int j=symbol_count-1; j>=0; j--) {
+                        if(symbol_scopes[j] > current_scope) { 
+                            if (symbol_types[j] == 3) fprintf(out, "sozluk_sil(%s);\n", symbol_table[j]);
+                            else if (symbol_types[j] == 4) fprintf(out, "free(%s);\n", symbol_table[j]);
+                            free(symbol_table[j]); symbol_count--; 
+                        }
+                    }
                     fprintf(out, "} else if (");
                     i++; // ise'yi atla
                 } else {
+                    current_scope--;
+                    for(int j=symbol_count-1; j>=0; j--) {
+                        if(symbol_scopes[j] > current_scope) { 
+                            if (symbol_types[j] == 3) fprintf(out, "sozluk_sil(%s);\n", symbol_table[j]);
+                            else if (symbol_types[j] == 4) fprintf(out, "free(%s);\n", symbol_table[j]);
+                            free(symbol_table[j]); symbol_count--; 
+                        }
+                    }
                     fprintf(out, "} else ");
-                    // Sonraki token IKINOKTA ise sadece '{' koy ve onu atla, '(' kapatmaya gerek yok
                     if (i + 1 < tokens->count && tokens->tokens[i+1].tip == TOKEN_IKINOKTA) {
                         fprintf(out, "{\n");
+                        current_scope++;
                         i++; // IKINOKTA'yi atla
                     }
                 }
             } else if (strcmp(t.deger, "son") == 0) {
-                fprintf(out, "}\n");
+                if (in_sinif_block) {
+                    fprintf(out, "} %s;\n", current_class_name);
+                    in_sinif_block = 0;
+                    current_scope--;
+                } else {
+                    current_scope--;
+                    for(int j=symbol_count-1; j>=0; j--) {
+                        if(symbol_scopes[j] > current_scope) { 
+                            if (symbol_types[j] == 3) {
+                                fprintf(out, "sozluk_sil(%s);\n", symbol_table[j]);
+                            } else if (symbol_types[j] == 4) {
+                                fprintf(out, "free(%s);\n", symbol_table[j]);
+                            }
+                            free(symbol_table[j]); 
+                            symbol_count--; 
+                        }
+                    }
+                    fprintf(out, "}\n");
+                }
             } else if (strcmp(t.deger, "yazdir") == 0) {
                 if (i + 1 < tokens->count) {
                     if (tokens->tokens[i+1].tip == TOKEN_ID) {
-                        if (!is_declared(tokens->tokens[i+1].deger)) {
+                        if (strncmp(tokens->tokens[i+1].deger, "_oz_", 4) != 0 && !is_declared(tokens->tokens[i+1].deger)) {
                             oz_hata_ver(t.satir, "Kullanilmaya calisilan degisken daha once tanimlanmamis!");
                             fclose(out); return 0;
                         }
@@ -119,6 +216,8 @@ int parse_and_transpile(TokenArray* tokens, const char* c_cikti_yolu) {
                         }
                         
                         int vtype = get_var_type(tokens->tokens[i+1 - (is_array ? 4 : 0)].deger);
+                        if (strcmp(tokens->tokens[i+1 - (is_array ? 4 : 0)].deger, "_oz_son_hata_mesaji") == 0) vtype = 1;
+
                         if (vtype == 1) {
                             fprintf(out, "printf(\"%%s\\n\", %s%s);\n", tokens->tokens[i+1 - (is_array ? 4 : 0)].deger, array_idx);
                         } else if (vtype == 2) {
@@ -168,6 +267,8 @@ int parse_and_transpile(TokenArray* tokens, const char* c_cikti_yolu) {
                 in_islev_decl = 1;
             } else if (strcmp(t.deger, "don") == 0) {
                 fprintf(out, "return ");
+            } else if (strcmp(t.deger, "kir") == 0) {
+                fprintf(out, "break;\n");
             }
         } else if (t.tip == TOKEN_ID) {
             fprintf(out, "%s ", t.deger);
@@ -188,7 +289,8 @@ int parse_and_transpile(TokenArray* tokens, const char* c_cikti_yolu) {
         } else if (t.tip == TOKEN_MOD) {
             fprintf(out, "%% ");
         } else if (t.tip == TOKEN_IKINOKTA) {
-            if (in_islev_decl) {
+            current_scope++;
+            if (in_islev_decl || in_sinif_block) {
                 fprintf(out, " {\n");
                 in_islev_decl = 0;
             } else {
@@ -210,6 +312,8 @@ int parse_and_transpile(TokenArray* tokens, const char* c_cikti_yolu) {
             fprintf(out, "[ ");
         } else if (t.tip == TOKEN_KOSELI_KAPA) {
             fprintf(out, "] ");
+        } else if (t.tip == TOKEN_NOKTA) {
+            fprintf(out, "->");
         } else if (t.tip == TOKEN_VIRGUL) {
             fprintf(out, ", ");
         } else if (t.tip == TOKEN_KUCUK_ESIT) {

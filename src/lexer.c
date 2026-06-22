@@ -49,7 +49,7 @@ TokenArray tokenize(const char* kaynak_kod) {
             continue;
         }
 
-        if (isalpha(c)) {
+        if (isalpha(c) || c == '_') {
             char tampon[256];
             int j = 0;
             while (isalnum(kaynak_kod[i]) || kaynak_kod[i] == '_') {
@@ -63,7 +63,11 @@ TokenArray tokenize(const char* kaynak_kod) {
                 strcmp(tampon, "yazdir") == 0 || strcmp(tampon, "zaman_baslat") == 0 ||
                 strcmp(tampon, "zaman_bitir") == 0 || strcmp(tampon, "don") == 0 ||
                 strcmp(tampon, "metin") == 0 || strcmp(tampon, "ondalik") == 0 ||
-                strcmp(tampon, "girdi") == 0 || strcmp(tampon, "dizi") == 0) {
+                strcmp(tampon, "girdi") == 0 || strcmp(tampon, "dizi") == 0 ||
+                strcmp(tampon, "sozluk") == 0 || strcmp(tampon, "dene") == 0 ||
+                strcmp(tampon, "hata_yakala") == 0 || strcmp(tampon, "hata_firlat") == 0 ||
+                strcmp(tampon, "sinif") == 0 || strcmp(tampon, "yeni") == 0 ||
+                strcmp(tampon, "kir") == 0) {
                 ekle_token(&dizi, TOKEN_ANAHTAR, tampon, satir);
             } else if (strcmp(tampon, "ve") == 0) {
                 ekle_token(&dizi, TOKEN_VE, "&&", satir);
@@ -104,10 +108,23 @@ TokenArray tokenize(const char* kaynak_kod) {
         if (c == '>') { ekle_token(&dizi, TOKEN_BUYUK, ">", satir); i++; continue; }
         if (c == ':') { ekle_token(&dizi, TOKEN_IKINOKTA, ":", satir); i++; continue; }
         if (c == '(') { ekle_token(&dizi, TOKEN_PARANTEZ_AC, "(", satir); i++; continue; }
-        if (c == ')') { ekle_token(&dizi, TOKEN_PARANTEZ_KAPA, ")", satir); i++; continue; }
-        if (c == '[') { ekle_token(&dizi, TOKEN_KOSELI_AC, "[", satir); i++; continue; }
-        if (c == ']') { ekle_token(&dizi, TOKEN_KOSELI_KAPA, "]", satir); i++; continue; }
-        if (c == ',') { ekle_token(&dizi, TOKEN_VIRGUL, ",", satir); i++; continue; }
+        if (c == ')') {
+            ekle_token(&dizi, TOKEN_PARANTEZ_KAPA, ")", satir);
+            i++;
+            continue;
+        } else if (c == '[') {
+            ekle_token(&dizi, TOKEN_KOSELI_AC, "[", satir);
+            i++;
+            continue;
+        } else if (c == ']') {
+            ekle_token(&dizi, TOKEN_KOSELI_KAPA, "]", satir);
+            i++;
+            continue;
+        } else if (c == '.') {
+            ekle_token(&dizi, TOKEN_NOKTA, ".", satir);
+            i++;
+            continue;
+        } else if (c == ',') { ekle_token(&dizi, TOKEN_VIRGUL, ",", satir); i++; continue; }
 
         i++; // Bilinmeyen karakteri atla
     }

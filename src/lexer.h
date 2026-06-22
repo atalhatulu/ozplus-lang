@@ -25,6 +25,7 @@ typedef enum {
     TOKEN_PARANTEZ_KAPA, // )
     TOKEN_KOSELI_AC,  // [
     TOKEN_KOSELI_KAPA,// ]
+    TOKEN_NOKTA,      // .
     TOKEN_VIRGUL,     // ,
     TOKEN_EOF         // Dosya sonu
 } TokenType;

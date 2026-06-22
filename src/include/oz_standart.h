@@ -1,7 +1,11 @@
 #include <stdio.h>
 #include <time.h>
+#include <setjmp.h>
+#include "oz_sozluk.h"
 
 clock_t _oz_baslangic_zamani;
+jmp_buf _oz_hata_buf;
+char* _oz_son_hata_mesaji = "Bilinmeyen hata";
 
 void _oz_zaman_baslat() {
     _oz_baslangic_zamani = clock();

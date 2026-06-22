@@ -1,0 +1,86 @@
+{
+    "$schema": "https://raw.githubusercontent.com/martinring/tmlanguage/master/tmlanguage.json",
+    "name": "OZ+",
+    "patterns": [
+        {
+            "include": "#comments"
+        },
+        {
+            "include": "#strings"
+        },
+        {
+            "include": "#keywords"
+        },
+        {
+            "include": "#types"
+        },
+        {
+            "include": "#numbers"
+        },
+        {
+            "include": "#operators"
+        }
+    ],
+    "repository": {
+        "comments": {
+            "patterns": [
+                {
+                    "match": "//.*$",
+                    "name": "comment.line.double-slash.ozplus"
+                }
+            ]
+        },
+        "strings": {
+            "patterns": [
+                {
+                    "begin": "\"",
+                    "end": "\"",
+                    "name": "string.quoted.double.ozplus",
+                    "patterns": [
+                        {
+                            "match": "\\\\.",
+                            "name": "constant.character.escape.ozplus"
+                        }
+                    ]
+                }
+            ]
+        },
+        "keywords": {
+            "patterns": [
+                {
+                    "match": "\\b(ise|degilse|dongu|dene|hata_yakala|hata_firlat|kir|don|son)\\b",
+                    "name": "keyword.control.ozplus"
+                },
+                {
+                    "match": "\\b(islev|sinif|yeni|dondur|yazdir|girdi|al|ve|veya|degil)\\b",
+                    "name": "keyword.other.ozplus"
+                }
+            ]
+        },
+        "types": {
+            "patterns": [
+                {
+                    "match": "\\b(metin|degisken|ondalik|dizi|sozluk)\\b",
+                    "name": "storage.type.ozplus"
+                }
+            ]
+        },
+        "numbers": {
+            "patterns": [
+                {
+                    "match": "\\b\\d+(\\.\\d+)?\\b",
+                    "name": "constant.numeric.ozplus"
+                }
+            ]
+        },
+        "operators": {
+            "patterns": [
+                {
+                    "match": "(==|!=|<=|>=|<|>|=|\\+|-|\\*|/|%)",
+                    "name": "keyword.operator.ozplus"
+                }
+            ]
+        }
+    },
+    "scopeName": "source.ozplus"
+}

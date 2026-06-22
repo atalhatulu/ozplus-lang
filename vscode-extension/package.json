@@ -1,0 +1,30 @@
+{
+    "name": "ozplus-lang",
+    "displayName": "OZ+ Programming Language",
+    "description": "Syntax highlighting and language support for OZ+",
+    "version": "0.1.0",
+    "publisher": "ozplus-team",
+    "engines": {
+        "vscode": "^1.60.0"
+    },
+    "categories": [
+        "Programming Languages"
+    ],
+    "contributes": {
+        "languages": [
+            {
+                "id": "ozplus",
+                "aliases": ["OZ+", "ozplus"],
+                "extensions": [".ozp"],
+                "configuration": "./language-configuration.json"
+            }
+        ],
+        "grammars": [
+            {
+                "language": "ozplus",
+                "scopeName": "source.ozplus",
+                "path": "./syntaxes/ozplus.tmLanguage.json"
+            }
+        ]
+    }
+}

@@ -3,27 +3,21 @@
 #include "oz_standart.h"
 
 int main() {
-long topla ( long a , long b )  {
-return a + b ;
+printf("%s\n", "=== OZ+ TELEFON REHBERI ===");
+printf("%s\n", "Rehberimize hos geldiniz.");
+printf("%s\n", "Cikmak ve programi sonlandirmak icin 'cikis' yazabilirsiniz.");
+printf("%s\n", "---------------------------");
+OzSozluk* rehber = sozluk_olustur ( ) ;
+sozluk_ekle ( rehber , "Ahmet" , "0555 123 45 67" ) ;
+sozluk_ekle ( rehber , "Ayse" , "0532 987 65 43" ) ;
+sozluk_ekle ( rehber , "Mehmet" , "0505 111 22 33" ) ;
+sozluk_ekle ( rehber , "cikis" , "CIKIS_ISTENDI" ) ;
+while (1 > 0 ) {
+    printf("%s\n", "Kimin numarasini ariyorsunuz? (Ornek: Ayse)");
+    char aranan_kisi[256] = ""; scanf(" %255[^\n]", aranan_kisi);     char* sonuc = sozluk_getir ( rehber , aranan_kisi ) ;
+    printf("%s\n", "Kayitli Numara:");
+    printf("%s\n", sonuc);
+    printf("%s\n", "---------------------------");
 }
-long cikar ( long a , long b )  {
-return a - b ;
-}
-printf("%s\n", "=== OZ+ HESAP MAKINESI ===");
-printf("%s\n", "Birinci sayiyi girin:");
-long sayi1 ;
-scanf("%ld", &sayi1);
-printf("%s\n", "Ikinci sayiyi girin:");
-long sayi2 ;
-scanf("%ld", &sayi2);
-printf("%s\n", "Toplam:");
-long sonuc = topla ( sayi1 , sayi2 ) ;
-printf("%ld\n", sonuc);
-printf("%s\n", "Fark:");
-long sonuc2 = cikar ( sayi1 , sayi2 ) ;
-printf("%ld\n", sonuc2);
-printf("%s\n", "Çarpım:");
-long sonuc = carp ( sayi1 , sayi2 ) ;
-printf("%ld\n", sonuc);
 return 0;
 }

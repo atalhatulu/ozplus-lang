@@ -21,13 +21,14 @@ Bu belge, OZ+ dilini sıfırdan alıp dünya standartlarında bir programlama di
 - [x] 12. Diziler (Listeler / Arrays) `dizi sayilar = [1, 2, 3]`
 - [x] 13. Kullanıcıdan Terminal Üzerinden Girdi Alma (`girdi al`)
 
-## Aşama 4: İleri Seviye Özellikler
-- [ ] 14. Kapsam (Scope) Yönetimi (Sadece döngü/fonksiyon içinde yaşayan değişkenler)
+## Aşama 4: İleri Seviye Özellikler (Tamamlandı)
+- [x] 14. Kapsam (Scope) Yönetimi (Sadece döngü/fonksiyon içinde yaşayan değişkenler)
 - [x] 15. Dosya İşlemleri (Bilgisayardaki metin dosyalarını okuma/yazma)
-- [ ] 16. Sözlük / Anahtar-Değer (Dictionary/Map) Veri Tipleri
-- [ ] 17. İleri Seviye Hata Yakalama (`dene: ... hata_yakala: ...`)
+- [x] 16. Sözlük / Anahtar-Değer (Dictionary/Map) Veri Tipleri
+- [x] 17. İleri Seviye Hata Yakalama (`dene: ... hata_yakala: ...`)
 
 ## Aşama 5: Profesyonel Ekosistem
-- [ ] 18. Nesne Yönelimli Programlama (Class / Sınıf yapısı) `sinif Araba:`
-- [ ] 19. Standart Kütüphane Genişlemesi (Zaman, Matematik, Ağ/İnternet modülleri)
+- [x] 18. Nesne Yönelimli Programlama (Class / Sınıf yapısı) `sinif Araba:`
+- [x] 19. Çöp Toplayıcı (Garbage Collector) Entegrasyonu
+- [x] 20. VS Code Extension (Eklenti) Geliştirme (Renklendirme ve hata denetimi)
 - [ ] 20. OZ+ için VS Code (Visual Studio Code) Renklendirme ve Otomatik Tamamlama Eklentisi!
